@@ -1,0 +1,66 @@
+---
+- name: prerequisite stuff
+  become: yes
+  hosts: localhost
+  tasks:
+    - name: install the package
+      package:
+        name: wget
+        state: present
+- name: configure ocp installation
+  hosts: localhost
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: make install directory
+      tempfile:
+        path: "{{ ansible_user_dir }}"
+        prefeix: "ocp-inst"
+        state: directory
+      register: tempdir
+    - name: tell the user the install dir
+      debug: msg="install is in {{ tempdir.path }}"
+    - name: get the install binary
+      command:
+        chdir: "{{ tempdir.path }}"
+        cmd: "wget -r --no-parent https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/latest/"
+    - name: find the install and client binaries
+      find:
+        path: "{{ tempdir.path }}"
+        patterns: 
+          - "openshift-install-linux*.tar.gz"
+          - "openshift-clients-linux*.tar.gz"
+      register: install-loc
+    - name: unarchive the installer and clients
+      unarchive:
+          src: "{{ item.path }}"
+          dest: "{{ tempdir.path }}"
+          remote_src: yes
+      with_items:
+        - "{{install_loc.files}}"
+    - name: deploy the install config
+      template:
+        dest: "{{tempdir.path}}/install-config.yaml"
+        src: install-config.yaml.j2
+    - name: find the release.txt
+      find:
+          paths: "{{tempdir.path}}" 
+          recurse: yes
+          patterns: "release.txt" 
+      register: release
+    - name: get the release image
+      shell: /usr/bin/grep Pull {{item.path}} | /usr/bin/awk '{print $3}'
+      with_items: "{{release.files}}"
+      register: pullspec
+    - name: write pull secret to file
+      lineinfile:
+          path: "{{tempdir.path}}/pull-secret-combined.json"
+          create: yes 
+          state: present
+          line:  "{{combined_pull_secret}}"
+    - name: mirror the images to local registry
+      command: "{{tempdir.path}}/oc adm -a {{tempdir.path}}/pull-secret-combined.json --from {{pullspec.stdout}} --to {{local_registry}}"
+      register: mirror_ouput
+    - name: show the mirror output
+      debug: var=mirror_ouput.stdout_lines
+    
