@@ -29,7 +29,7 @@
     - name: find the install and client binaries
       find:
         path: "{{ tempdir.path }}"
-        patterns: 
+        patterns:
           - "openshift-install-linux*.tar.gz"
           - "openshift-clients-linux*.tar.gz"
       register: install_loc
@@ -46,9 +46,9 @@
         src: install-config.yaml.j2
     - name: find the release.txt
       find:
-          paths: "{{tempdir.path}}" 
+          paths: "{{tempdir.path}}"
           recurse: yes
-          patterns: "release.txt" 
+          patterns: "release.txt"
       register: release
     - name: get the release image
       shell: /usr/bin/grep Pull {{item.path}} | /usr/bin/awk '{print $3}'
@@ -65,4 +65,3 @@
       register: mirror_ouput
     - name: show the mirror output
       debug: var=mirror_ouput.stdout_lines
-    
