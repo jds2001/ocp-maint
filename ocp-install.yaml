@@ -24,13 +24,15 @@
       command:
         chdir: "{{ tempdir.path }}"
         cmd: "wget -r --no-parent https://mirror.openshift.com/pub/openshift-v4/clients/ocp-dev-preview/latest/"
+        # this is needed because of the recursive get of the directory
+        warn: false
     - name: find the install and client binaries
       find:
         path: "{{ tempdir.path }}"
         patterns: 
           - "openshift-install-linux*.tar.gz"
           - "openshift-clients-linux*.tar.gz"
-      register: install-loc
+      register: install_loc
     - name: unarchive the installer and clients
       unarchive:
           src: "{{ item.path }}"
