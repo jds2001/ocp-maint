@@ -15,7 +15,7 @@
     - name: make install directory
       tempfile:
         path: "{{ ansible_user_dir }}"
-        prefeix: "ocp-inst"
+        prefix: "ocp-inst"
         state: directory
       register: tempdir
     - name: tell the user the install dir
