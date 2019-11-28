@@ -56,10 +56,14 @@
       register: pullspec
     - name: write pull secret to file
       lineinfile:
-          path: "{{tempdir.path}}/pull-secret-combined.json"
+          path: "{{tempdir.path}}/pull-secret-combined1.json"
           create: yes 
           state: present
           line:  "{{combined_pull_secret}}"
+    - name: make the pull secret usable
+      shell:
+        chdir: "{{tempdir.path}}"
+        cmd:  /usr/bin/sed -ie 's/string(//g ; s/)//g' pull-secret-combined1.json | /usr/bin/python -m json.tool > pull-secret-combined.json
     - name: mirror the images to local registry
       command: "{{tempdir.path}}/oc adm -a {{tempdir.path}}/pull-secret-combined.json --from {{pullspec.stdout}} --to {{local_registry}}"
       register: mirror_ouput
