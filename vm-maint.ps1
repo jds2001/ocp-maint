@@ -45,7 +45,7 @@ function Set-VMBootOrderHD {
     process {
         $vm = Get-VM -Name $vmName
         $drive = Get-VMHardDiskDrive -VM $vm
-        Set-VMFirmware -FirstBootDevice $drive
+        Set-VMFirmware -VM $vm -FirstBootDevice $drive
     }
 }
 
