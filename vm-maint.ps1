@@ -6,7 +6,7 @@ param (
 )
 
 $clusterVMs = ("bootstrap", "master1", "master2", "master3", "worker1", "worker2")
-$externalClusterVMs = ("bootstrap-external", "master1-external", "master2-external", "master3-external", "worker1-external", "worker2-external", "bootstrap-external")
+$externalClusterVMs = ("bootstrap-external", "master1-external", "master2-external", "master3-external", "worker1-external", "worker2-external" )
 
 function New-CustomVM {
     [CmdletBinding()]
