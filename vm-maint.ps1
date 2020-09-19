@@ -6,16 +6,18 @@ param (
 )
 
 $clusterVMs = ("bootstrap", "master1", "master2", "master3", "worker1", "worker2")
+$externalClusterVMs = ("bootstrap-external", "master1-external", "master2-external", "master3-external", "worker1-external", "worker2-external", "bootstrap-external")
 
 function New-CustomVM {
     [CmdletBinding()]
     param (
         [Parameter(Mandatory)]
-        [String]$vmName
+        [String]$vmName,
+        [String]$switchName
     )
 
     process {
-        $vm = New-VM -Name $vmName -NewVHDPath "E:\VM Files\$vmName.vhdx" -NewVHDSizeBytes 100GB -MemoryStartupBytes 8GB -BootDevice VHD -Generation 2 -SwitchName "private"
+        $vm = New-VM -Name $vmName -NewVHDPath "E:\VM Files\$vmName.vhdx" -NewVHDSizeBytes 100GB -MemoryStartupBytes 8GB -BootDevice VHD -Generation 2 -SwitchName $switchName
         Set-VM -VM $vm -ProcessorCount 4 -DynamicMemory  -MemoryMaximumBytes 16GB -MemoryMinimumBytes 4GB 
         Add-VMScsiController -VM $vm -Passthru
         $dvd = Add-VMDvdDrive -VM $vm -ControllerNumber 1 -Path "D:\downloads\rhcos-42.80.20190828.2-installer.iso" -Passthru
@@ -27,6 +29,12 @@ function New-CustomVM {
             "master3" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:14" }
             "worker1" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:15" }
             "worker2" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:16" }
+            "master1-external" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:17" }
+            "master2-external" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:18" }
+            "master3-external" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:19" }
+            "worker1-external" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:1A" }
+            "worker2-external" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:1B" }
+            "bootstrap-external" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:1C" }
             "bootstrap" { Set-VMNetworkAdapter -VM $vm -StaticMacAddress "00:15:5D:B7:25:11" }
             Default {}
         }
@@ -71,14 +79,20 @@ function Remove-PowerOffVM {
 
 switch ($action) {
     "create-cluster" { 
-        $clusterVMs | ForEach-Object -Process { New-CustomVM -vmName $_ }
+        $clusterVMs | ForEach-Object -Process { New-CustomVM -vmName $_ -switchName "private"}
+    }
+    "create-external-cluster" {
+        $externalClusterVMs | ForEach-Object -Process { New-CustomVM -vmName $_ -switchName "external vswitch" }
     }
     "create-test" {
         $vms = ("test-vm")
-        $vms | ForEach-Object -Process { New-CustomVM -vmName $_ }
+        $vms | ForEach-Object -Process { New-CustomVM -vmName $_ -switchName "private"}
     }
     "delete-cluster" {
         $clusterVMs | ForEach-Object -Process { Remove-PowerOffVM -vmName $_ }
+    }
+    "delete-external-cluster" {
+        $externalClusterVMs | ForEach-Object -Process { Remove-PowerOffVM -vmName $_ }
     }
     "delete-test" {
         $vms = ("test-vm")
@@ -89,6 +103,10 @@ switch ($action) {
             Set-VMBootOrderHD -vmName $_
         }
     }
+    "set-external-cluster-boot" {
+        $externalClusterVMs | ForEach-Object -Process { Set-VMBootOrderHD -vmName $_ }
+    }
     "delete-bootstrap" { Remove-PowerOffVM -vmName "bootstrap" }
+    "delete-external-bootstrap" { Remove-PowerOffVM -vmName "bootstrap-external "}
     Default { Write-Error "invalid choice" }
 }
