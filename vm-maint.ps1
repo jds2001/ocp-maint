@@ -20,7 +20,7 @@ function New-CustomVM {
         $vm = New-VM -Name $vmName -NewVHDPath "E:\VM Files\$vmName.vhdx" -NewVHDSizeBytes 100GB -MemoryStartupBytes 8GB -BootDevice VHD -Generation 2 -SwitchName $switchName
         Set-VM -VM $vm -ProcessorCount 4 -DynamicMemory  -MemoryMaximumBytes 16GB -MemoryMinimumBytes 4GB 
         Add-VMScsiController -VM $vm -Passthru
-        $dvd = Add-VMDvdDrive -VM $vm -ControllerNumber 1 -Path "D:\downloads\rhcos-42.80.20190828.2-installer.iso" -Passthru
+        $dvd = Add-VMDvdDrive -VM $vm -ControllerNumber 1 -Path "D:\Downloads\rhcos-4.6.0-0.nightly-2020-09-10-195619-x86_64-live.x86_64.iso" -Passthru
         Set-VMFirmware -VM $vm -EnableSecureBoot On -SecureBootTemplate "MicrosoftUEFICertificateAuthority" -FirstBootDevice $dvd
         # set  our custom MAC's so DHCP works and they get the right IP - this is a pretty bad hack
         switch ($vmName) {
