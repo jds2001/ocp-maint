@@ -18,9 +18,9 @@ function New-CustomVM {
 
     process {
         $vm = New-VM -Name $vmName -NewVHDPath "E:\VM Files\$vmName.vhdx" -NewVHDSizeBytes 100GB -MemoryStartupBytes 8GB -BootDevice VHD -Generation 2 -SwitchName $switchName
-        Set-VM -VM $vm -ProcessorCount 4 -DynamicMemory  -MemoryMaximumBytes 16GB -MemoryMinimumBytes 4GB 
+        Set-VM -VM $vm -ProcessorCount 4 -DynamicMemory  -MemoryMaximumBytes 32GB -MemoryMinimumBytes 4GB 
         Add-VMScsiController -VM $vm -Passthru
-        $dvd = Add-VMDvdDrive -VM $vm -ControllerNumber 1 -Path "D:\Downloads\rhcos-4.6.0-0.nightly-2020-09-10-195619-x86_64-live.x86_64.iso" -Passthru
+        $dvd = Add-VMDvdDrive -VM $vm -ControllerNumber 1 -Path "D:\Downloads\rhcos-installer-4.6.1.x86_64.iso" -Passthru
         Set-VMFirmware -VM $vm -EnableSecureBoot On -SecureBootTemplate "MicrosoftUEFICertificateAuthority" -FirstBootDevice $dvd
         # set  our custom MAC's so DHCP works and they get the right IP - this is a pretty bad hack
         switch ($vmName) {
@@ -107,6 +107,6 @@ switch ($action) {
         $externalClusterVMs | ForEach-Object -Process { Set-VMBootOrderHD -vmName $_ }
     }
     "delete-bootstrap" { Remove-PowerOffVM -vmName "bootstrap" }
-    "delete-external-bootstrap" { Remove-PowerOffVM -vmName "bootstrap-external "}
+    "delete-external-bootstrap" { Remove-PowerOffVM -vmName "bootstrap-external"}
     Default { Write-Error "invalid choice" }
 }
